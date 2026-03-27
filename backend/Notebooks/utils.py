@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_curve
 import seaborn as sns
+from transformers import AutoTokenizer
 
 #function to load the data
 def load_data(file_path):
@@ -117,3 +118,9 @@ def plot_precision_recall(y_true, y_scores):
     plt.ylabel('F1 Score')
     plt.title('F1 Score Curve')
     plt.show()
+
+
+#function to load the tokenizer
+def load_tokenizer(model_name):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    return tokenizer
