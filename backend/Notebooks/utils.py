@@ -1,40 +1,52 @@
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_recall_curve
 import seaborn as sns
-from transformers import AutoTokenizer
+import os
+from sklearn.metrics import confusion_matrix, precision_recall_curve
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-#function to load the data
-def load_data(file_path):
-    """
-    Loads the dataset from the specified file path.
+# --- OWNER'S DIRECTIVES / CONFIGURATION ---
+BASE_PATH = '/content/drive/MyDrive/Colab Notebooks/backend'
+MODEL_NAME = "microsoft/deberta-v3-base"
+DATA_PATH = os.path.join(BASE_PATH, "Data/Generated/Chunk2_D/train.csv")
 
-    Args:
-        file_path (str): The path to the CSV file containing the dataset.
-    Returns:
-        pd.DataFrame: The loaded dataset as a pandas DataFrame.
-    """
+# 1. Function to load the data (with owner's try-except logic)
+def load_data(file_path=DATA_PATH):
+    """Loads the dataset from the specified file path."""
     try:
         dataset = pd.read_csv(file_path)
+        print(f"Dataset successfully loaded from: {file_path}")
         return dataset
     except Exception as e:
         print(f"Error loading data: {e}")
-        return None
-    
-#function to plot the distribution of the data
-def plot_distribution(data, column):
-    """
-    Plots the distribution of the specified column in the dataset.
+        return None         
 
-    Args:
-        data (pd.DataFrame): The dataset as a pandas DataFrame.
-        column (str): The name of the column to plot the distribution for.
-    """
+# 2. Function to load the tokenizer
+def load_tokenizer(model_name=MODEL_NAME):
+    """Initializes the tokenizer for the specified model."""
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        return tokenizer
+    except Exception as e:
+        print(f"Error loading tokenizer: {e}")
+        return None
+
+# 3. Function to load the model
+def get_model(model_name=MODEL_NAME, num_labels=2):
+    """Initializes the model for sequence classification."""
+    try:
+        model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
+        return model
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return None
+
+# 4. Function to plot data distribution
+def plot_distribution(data, column):
     try:
         plt.figure(figsize=(10, 6))
-        data[column].value_counts().plot(kind='bar')
+        data[column].value_counts().plot(kind='bar', color='skyblue')
         plt.title(f'Distribution of {column}')
         plt.xlabel(column)
         plt.ylabel('Count')
@@ -42,85 +54,60 @@ def plot_distribution(data, column):
     except Exception as e:
         print(f"Error plotting distribution: {e}")
 
-
-#function to plot the accuracy
+# 5. Function to plot training accuracy
 def plot_accuracy(train_acc, val_acc):
-    """
-    Plots the accuracy of the specified column in the dataset.
-
-    Args:
-        data (pd.DataFrame): The dataset as a pandas DataFrame.
-        column (str): The name of the column to plot the accuracy for.
-    """
     try:
         plt.figure(figsize=(10, 6))
-        plt.plot(train_acc, label='Training Accuracy')
-        plt.plot(val_acc, label='Validation Accuracy')
+        plt.plot(train_acc, label='Training Accuracy', marker='o')
+        plt.plot(val_acc, label='Validation Accuracy', marker='x')
         plt.title('Model Accuracy')
         plt.xlabel('Epoch')
         plt.ylabel('Accuracy')
         plt.legend()
+        plt.grid(True)
         plt.show()
     except Exception as e:
         print(f"Error plotting accuracy: {e}")
 
-#function to plot the loss
+# 6. Function to plot training loss
 def plot_loss(train_loss, val_loss):
-    """
-    Plots the loss of the specified column in the dataset.
-
-    Args:
-        data (pd.DataFrame): The dataset as a pandas DataFrame.
-        column (str): The name of the column to plot the loss for.
-    """
     try:
         plt.figure(figsize=(10, 6))
         plt.plot(train_loss, label='Training Loss')
         plt.plot(val_loss, label='Validation Loss')
         plt.title('Model Loss')
-        plt.xlabel('Epoch')
+        plt.xlabel('Steps/Epoch')
         plt.ylabel('Loss')
         plt.legend()
+        plt.grid(True)
         plt.show()
     except Exception as e:
         print(f"Error plotting loss: {e}")
 
-#function to plot the confusion matrix
-def plot_confusion_matrix(y_true, y_pred,classes=[0,1]):
-    """
-    Plots the confusion matrix for the given true and predicted labels.
-    
-    Args:
-        y_true (array-like): True labels.
-        y_pred (array-like): Predicted labels.
-        classes (list): List of class labels to display on the axes.    
-    """
-    cm = confusion_matrix(y_true, y_pred)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=classes, yticklabels=classes)
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
-    plt.show()
+# 7. Function to plot the confusion matrix
+def plot_confusion_matrix(y_true, y_pred, classes=[0,1]):
+    try:
+        cm = confusion_matrix(y_true, y_pred)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=classes, yticklabels=classes)
+        plt.xlabel('Predicted Label')
+        plt.ylabel('True Label')
+        plt.title('Confusion Matrix')
+        plt.show()
+    except Exception as e:
+        print(f"Error plotting confusion matrix: {e}")
 
-
-#function to plot the precision-recall curve
+# 8. Function to plot precision-recall/F1 curve
 def plot_precision_recall(y_true, y_scores):
-    """
-    Plots the precision-recall curve for the given true labels and predicted scores.
-    Args:
-        y_true (array-like): True labels.
-        y_scores (array-like): Predicted scores or probabilities for the positive class.
-    """
-    precision, recall, _ = precision_recall_curve(y_true, y_scores)
-    f1_scores = 2 * (precision * recall) / (precision + recall)
-    plt.plot(recall, f1_scores, marker='.')
-    plt.xlabel('Recall')
-    plt.ylabel('F1 Score')
-    plt.title('F1 Score Curve')
-    plt.show()
-
-
-#function to load the tokenizer
-def load_tokenizer(model_name):
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    return tokenizer
+    try:
+        precision, recall, _ = precision_recall_curve(y_true, y_scores)
+        f1_scores = 2 * (precision * recall) / (precision + recall + 1e-10)
+        plt.figure(figsize=(10, 6))
+        plt.plot(recall, f1_scores, marker='.', label='F1 Curve')
+        plt.xlabel('Recall')
+        plt.ylabel('F1 Score')
+        plt.title('F1 Score vs Recall')
+        plt.legend()
+        plt.show()
+    except Exception as e:
+        print(f"Error plotting precision-recall: {e}")
