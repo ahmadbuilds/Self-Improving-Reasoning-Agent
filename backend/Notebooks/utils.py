@@ -1,10 +1,17 @@
 import os
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, precision_recall_curve
 import seaborn as sns
 from transformers import AutoTokenizer
+import tensorflow as tf
+try:
+    from backend.prompts.reasoning_prompt import reasoning_prompt
+except ModuleNotFoundError:
+    from prompts.reasoning_prompt import reasoning_prompt
+from groq import Groq
+import re 
+
 
 #function to load the dataset
 def load_data(file_path):
@@ -163,3 +170,83 @@ def plot_precision_recall(y_true, y_scores):
     plt.ylabel('F1 Score')
     plt.title('F1 Score Curve')
     plt.show()
+
+#function to load the model with trained weights from a specified path
+def load_model(checkpoint_path="../Trained_Weights/deberta_reasoning_best.keras"):
+    """
+    Loads the model with trained weights from a specified path.
+
+    Args:
+        checkpoint_path (str): The path to the checkpoint file containing the trained weights.
+    """
+    try:
+        model=tf.keras.models.load_model(checkpoint_path)
+        print(f"Model successfully loaded from: {checkpoint_path}")
+        return model
+    except Exception as e:
+        print(f"Error loading model: {e}")
+
+
+
+def extract_reasoning_and_answer(content: str):
+    if not content or not content.strip():
+        return None, None
+
+    # Pattern 1: Split on labeled answer
+    parts = re.split(r'(?i)\*{0,2}\s*(?:final\s+)?answer\s*\*{0,2}\s*:\s*\*{0,2}', content)
+    if len(parts) > 1:
+        answer_part = parts[-1].strip()
+        reasoning_part = "Answer:".join(parts[:-1]).strip()
+        reasoning_part = re.sub(r'(?i)^\*{0,2}\s*reasoning\s*\*{0,2}\s*:\s*\*{0,2}\s*', '', reasoning_part)
+        if reasoning_part and answer_part:
+            return reasoning_part, answer_part
+
+    # Pattern 2: "The answer is X" at the end
+    m = re.search(r'(?i)the\s+answer\s+is\s*[:\s]*(.+)$', content)
+    if m:
+        answer_part = m.group(1).strip().rstrip('.')
+        reasoning_part = content[:m.start()].strip()
+        reasoning_part = re.sub(r'(?i)^\*{0,2}\s*reasoning\s*\*{0,2}\s*:\s*\*{0,2}\s*', '', reasoning_part)
+        if reasoning_part and answer_part:
+            return reasoning_part, answer_part
+
+    # Pattern 3: Last line is the answer
+    lines = [l.strip() for l in content.strip().split('\n') if l.strip()]
+    if len(lines) >= 2:
+        last_line = lines[-1]
+        last_line_clean = re.sub(
+            r'(?i)^\*{0,2}\s*(?:answer|result|final answer)\s*\*{0,2}\s*:?\s*',
+            '', last_line
+        ).strip()
+        if last_line_clean and len(last_line_clean) < 50:
+            reasoning_part = '\n'.join(lines[:-1]) # Fixed the \n here!
+            reasoning_part = re.sub(r'(?i)^\*{0,2}\s*reasoning\s*\*{0,2}\s*:\s*\*{0,2}\s*', '', reasoning_part)
+            return reasoning_part, last_line_clean
+
+    return content.strip(), None
+
+
+
+def generate_reasoning(problem:str,client:Groq):
+    """
+    Generates step-by-step reasoning for a given math problem using the Groq API.
+    Args:
+        problem (str): The math problem to solve.
+        client (Groq): An instance of the Groq client initialized with the API key.
+    """
+    chat_completion=client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role":"system",
+                "content":reasoning_prompt
+            },
+            {
+                "role":"user",
+                "content":f"Problem: {problem}"
+            }
+        ],
+        temperature=0.2
+    )
+
+    return chat_completion.choices[0].message.content
