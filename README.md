@@ -146,6 +146,3 @@ The entire pipeline is Docker hardened and natively compatible with Hugging Face
    git push huggingface main
    ```
 4. Ensure `GROQ_API_KEY` is inputted into the Space secure Secrets tab. Everything else is orchestrated gracefully via the included Dockerfile!
-
-## Documentation and Reporting
-Comprehensive documentation has been prepared throughout the project lifecycle. This encompasses project design and architecture, the dataset preparation process, detailed model implementation specs, training procedures, and extensive evaluation results and performance analyses.
