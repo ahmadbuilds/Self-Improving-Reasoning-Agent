@@ -172,13 +172,15 @@ def plot_precision_recall(y_true, y_scores):
     plt.show()
 
 #function to load the model with trained weights from a specified path
-def load_model(checkpoint_path="../Trained_Weights/deberta_reasoning_best.keras"):
+def load_model(checkpoint_path=None):
     """
     Loads the model with trained weights from a specified path.
 
     Args:
         checkpoint_path (str): The path to the checkpoint file containing the trained weights.
     """
+    if checkpoint_path is None:
+        checkpoint_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Trained_Weights", "deberta_reasoning_best.keras")
     try:
         model=tf.keras.models.load_model(checkpoint_path)
         print(f"Model successfully loaded from: {checkpoint_path}")
