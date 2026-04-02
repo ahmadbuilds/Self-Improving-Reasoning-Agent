@@ -104,7 +104,6 @@ Distributions mitigating input context limits to ensure sequence trimming constr
 |:---:|:---:|
 | ![Text Lengths](backend/Reports/Instruction_text_length.png) | ![Distribution](backend/Reports/Distribution%20of%20Data.png) |
 
-*(Note: Chunk reports located further inside /Reports/ subdirectories remain structurally excluded here to outline the top-level parameters).*
 
 ## How to Run Locally
 
@@ -142,7 +141,7 @@ The entire pipeline is Docker hardened and natively compatible with Hugging Face
 2. Create a Hugging Face Space (SDK -> Docker -> Blank). 
 3. Deploy local context directly into HF leveraging up to 50 GB caps:
    ```bash
-   git remote add huggingface https://huggingface.co/spaces/ahmadbuilds/Self-Improving-Reasoning-Agent
+   git remote add huggingface https://huggingface.co/spaces/<your-username>/<your-space-name>
    git push huggingface main
    ```
 4. Ensure `GROQ_API_KEY` is inputted into the Space secure Secrets tab. Everything else is orchestrated gracefully via the included Dockerfile!
