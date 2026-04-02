@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     from prompts.reasoning_prompt import reasoning_prompt
 from groq import Groq
 import re 
-
+from huggingface_hub import hf_hub_download
 
 #function to load the dataset
 def load_data(file_path):
@@ -172,21 +172,22 @@ def plot_precision_recall(y_true, y_scores):
     plt.show()
 
 #function to load the model with trained weights from a specified path
-def load_model(checkpoint_path=None):
+def load_model(repo_id="ahmadbuilds/critic-model", filename="deberta_reasoning_best.keras"):
     """
     Loads the model with trained weights from a specified path.
 
     Args:
         checkpoint_path (str): The path to the checkpoint file containing the trained weights.
     """
-    if checkpoint_path is None:
-        checkpoint_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Trained_Weights", "deberta_reasoning_best.keras")
     try:
-        model=tf.keras.models.load_model(checkpoint_path)
-        print(f"Model successfully loaded from: {checkpoint_path}")
+        model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+    
+        model = tf.keras.models.load_model(model_path)
+        print(f"Model successfully loaded from HF Hub: {repo_id}/{filename}")
         return model
     except Exception as e:
-        print(f"Error loading model: {e}")
+        print(f"Error loading model from HF Hub: {e}")
+        return None
 
 
 
