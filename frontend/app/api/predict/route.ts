@@ -25,7 +25,14 @@ export async function POST(req: NextRequest) {
     if (!backendResponse.ok) {
         const errorText = await backendResponse.text();
         console.error("Backend error:", errorText);
-        return NextResponse.json({ error: `Backend returned status ${backendResponse.status}` }, { status: backendResponse.status });
+        let errorMsg = `Backend returned status ${backendResponse.status}`;
+        try {
+          const parsed = JSON.parse(errorText);
+          errorMsg = parsed.detail || parsed.message || errorMsg;
+        } catch (e) {
+          // fallback to default
+        }
+        return NextResponse.json({ error: errorMsg }, { status: backendResponse.status });
     }
 
     const data = await backendResponse.json();

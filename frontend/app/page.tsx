@@ -67,16 +67,23 @@ export default function Home() {
 
       [t1, t2, t3, t4].forEach(clearTimeout);
 
-      if (!res.ok) throw new Error("Failed to fetch response");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch response");
+      }
       const data: ResponseData = await res.json();
 
       setRetryCount(data.self_improve_attempts ?? 0);
       setStage("done");
       setResult(data);
-    } catch {
+    } catch (err: any) {
       [t1, t2, t3, t4].forEach(clearTimeout);
       setStage("idle");
-      setError("Connection failed. Please ensure the backend server is running.");
+      setError(
+        err?.message === "Failed to fetch"
+          ? "The reasoning engine is currently unreachable. Please try again later."
+          : err?.message || "An unexpected error occurred."
+      );
     } finally {
       setIsLoading(false);
     }
