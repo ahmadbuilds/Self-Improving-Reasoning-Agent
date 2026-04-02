@@ -142,7 +142,7 @@ The entire pipeline is Docker hardened and natively compatible with Hugging Face
 2. Create a Hugging Face Space (SDK -> Docker -> Blank). 
 3. Deploy local context directly into HF leveraging up to 50 GB caps:
    ```bash
-   git remote add huggingface https://huggingface.co/spaces/<your-username>/<your-space-name>
+   git remote add huggingface https://huggingface.co/spaces/ahmadbuilds/Self-Improving-Reasoning-Agent
    git push huggingface main
    ```
 4. Ensure `GROQ_API_KEY` is inputted into the Space secure Secrets tab. Everything else is orchestrated gracefully via the included Dockerfile!
